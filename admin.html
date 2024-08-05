@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Admin Page</h1>
+    <a href="index.html" class="button">Back to Home</a>
+
+    <h2>Register Doctor</h2>
+    <form id="doctorForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="specialization">Specialization:</label>
+        <select id="specialization" name="specialization" required>
+            <option value="GP">General Practitioner</option>
+            <option value="Specialist">Specialist</option>
+            <option value="Surgeon">Surgeon</option>
+            <option value="Dentist">Dentist</option>
+            <option value="Pediatrician">Pediatrician</option>
+        </select>
+        <button type="submit">Register</button>
+    </form>
+
+    <h2>Weekly Schedule</h2>
+    <div id="schedule"></div>
+
+    <script>
+        const slots = {
+            "GP": ["09:00", "10:00", "11:00"],
+            "Specialist": ["13:00", "14:00", "15:00"],
+            "Surgeon": ["16:00", "17:00"],
+            "Dentist": ["08:00", "09:00"],
+            "Pediatrician": ["10:00", "11:00"]
+        };
+
+        let doctors = JSON.parse(localStorage.getItem('doctors')) || [];
+        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+
+        function renderSchedule() {
+            const scheduleDiv = document.getElementById('schedule');
+            scheduleDiv.innerHTML = '';
+
+            const groupedByType = doctors.reduce((acc, doc) => {
+                if (!acc[doc.specialization]) {
+                    acc[doc.specialization] = [];
+                }
+                acc[doc.specialization].push(doc);
+                return acc;
+            }, {});
+
+            Object.keys(groupedByType).forEach(type => {
+                const section = document.createElement('div');
+                section.innerHTML = `<h3>${type}</h3>`;
+
+                const table = document.createElement('table');
+                const header = document.createElement('thead');
+                header.innerHTML = '<tr><th>Doctor</th><th>Availability</th></tr>';
+                table.appendChild(header);
+
+                const body = document.createElement('tbody');
+                groupedByType[type].forEach(doc => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${doc.name}</td><td>${slots[type].join(', ')}</td>`;
+                    body.appendChild(row);
+                });
+
+                table.appendChild(body);
+                section.appendChild(table);
+                scheduleDiv.appendChild(section);
+            });
+        }
+
+        function registerDoctor(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const specialization = document.getElementById('specialization').value;
+
+            if (name && specialization) {
+                doctors.push({ name, specialization });
+                localStorage.setItem('doctors', JSON.stringify(doctors));
+                alert('Doctor registered successfully!');
+                renderSchedule();
+            } else {
+                alert('Please fill in all fields.');
+            }
+        }
+
+        document.getElementById('doctorForm').addEventListener('submit', registerDoctor);
+        renderSchedule();
+    </script>
+</body>
+</html>

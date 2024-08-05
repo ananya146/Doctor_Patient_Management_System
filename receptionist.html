@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receptionist Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Receptionist Page</h1>
+    <a href="index.html" class="button">Back to Home</a>
+
+    <h2>Book Appointment</h2>
+    <form id="appointmentForm">
+        <label for="patientName">Patient Name:</label>
+        <input type="text" id="patientName" name="patientName" required>
+        <label for="doctorType">Doctor Type:</label>
+        <select id="doctorType" name="doctorType" required>
+            <option value="">Select Doctor Type</option>
+            <!-- Options will be dynamically added -->
+        </select>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required>
+        <label for="slot">Slot:</label>
+        <select id="slot" name="slot" required></select>
+        <button type="submit">Book Appointment</button>
+    </form>
+
+    <script>
+        const schedule = {
+            "GP": ["09:00", "10:00", "11:00"],
+            "Specialist": ["13:00", "14:00", "15:00"],
+            "Surgeon": ["16:00", "17:00"],
+            "Dentist": ["08:00", "09:00"],
+            "Pediatrician": ["10:00", "11:00"]
+        };
+
+        let doctors = JSON.parse(localStorage.getItem('doctors')) || [];
+        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+
+        function updateSlots() {
+            const doctorType = document.getElementById('doctorType').value;
+            const date = document.getElementById('date').value;
+            const slotSelect = document.getElementById('slot');
+
+            slotSelect.innerHTML = '';
+
+            if (doctorType && date) {
+                const availableSlots = schedule[doctorType] || [];
+
+                // Filter out slots that are fully booked
+                const bookedSlots = appointments.filter(app => app.date === date && app.doctorType === doctorType).map(app => app.slot);
+                const freeSlots = availableSlots.filter(slot => !bookedSlots.includes(slot));
+
+                freeSlots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot;
+                    option.textContent = slot;
+                    slotSelect.appendChild(option);
+                });
+            }
+        }
+
+        function bookAppointment(event) {
+            event.preventDefault();
+
+            const patientName = document.getElementById('patientName').value;
+            const doctorType = document.getElementById('doctorType').value;
+            const date = document.getElementById('date').value;
+            const slot = document.getElementById('slot').value;
+
+            if (patientName && doctorType && date && slot) {
+                appointments.push({ patientName, doctorType, date, slot });
+                localStorage.setItem('appointments', JSON.stringify(appointments));
+                alert('Appointment booked successfully!');
+            } else {
+                alert('Please fill in all fields.');
+            }
+        }
+
+        document.getElementById('doctorType').addEventListener('change', updateSlots);
+        document.getElementById('date').addEventListener('change', updateSlots);
+        document.getElementById('appointmentForm').addEventListener('submit', bookAppointment);
+
+        // Populate doctor types on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const doctorSelect = document.getElementById('doctorType');
+            Object.keys(schedule).forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                doctorSelect.appendChild(option);
+            });
+        });
+    </script>
+</body>
+</html>
